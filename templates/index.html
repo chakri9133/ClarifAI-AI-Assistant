@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ClarifAI - AI that Listens, Sees and Explains</title>
+  <link rel="stylesheet" href="static/style.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="chat-column">
+      <h1>ClarifAI - AI that Listens, Sees and Explains</h1>
+
+      <!-- About Button -->
+      <div style="text-align: right; margin-top: -10px; margin-bottom: 10px;">
+        <button id="about-button" style="background-color: #7289da;">ℹ️ About</button>
+        </div>
+            <div style="text-align: right; margin-bottom: 10px;">
+        <label class="dark-toggle">
+          🌞
+          <input type="checkbox" id="darkModeToggle">
+          <span class="slider-toggle"></span>
+          🌙
+        </label>
+      </div>
+
+
+      <div id="chat-window"></div>
+      <div class="input-row">
+        <input id="query-input" type="text" placeholder="Type your question here..." autocomplete="off" />
+        <button id="ask-button">Ask</button>
+        <button id="mic-button">🎙️</button>
+        <input type="file" id="image-upload" accept="image/*" />
+        <button id="upload-button">Upload Image</button>
+        <label class="toggle">
+          <input type="checkbox" id="speakToggle" />
+          <span class="slider"></span>
+        </label>
+        <span class="toggle-label">Speak</span>
+      </div>
+    </div>
+
+    <div class="emotion-display">
+      <h3>Student Emotion:</h3>
+      <div id="emotion-label">Detecting...</div>
+    </div>
+  </div>
+
+  <!-- About Modal -->
+  <div id="about-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-button">&times;</span>
+      <h2>About ClarifAI</h2>
+      <p><strong>ClarifAI</strong> is your smart classroom buddy! It listens to your voice or text questions, understands images, detects your emotion, and replies in a simple, friendly way.</p>
+      <ul>
+        <li>🧠 Ask questions via text or mic</li>
+        <li>📸 Upload images for AI analysis</li>
+        <li>🔊 Get spoken responses (toggle above)</li>
+        <li>😊 ClarifAI adjusts based on your emotion</li>
+      </ul>
+      <p>Perfect for learning interactively, built just for students like you!</p>
+    </div>
+  </div>
+
+  <script>
+    const askBtn = document.getElementById("ask-button");
+    const micBtn = document.getElementById("mic-button");
+    const inputBox = document.getElementById("query-input");
+    const chatWindow = document.getElementById("chat-window");
+    const emotionLabel = document.getElementById("emotion-label");
+    const speakToggle = document.getElementById("speakToggle");
+    const uploadBtn = document.getElementById("upload-button");
+    const imageInput = document.getElementById("image-upload");
+
+    function appendMessage(sender, html, className = "") {
+      const msg = document.createElement("div");
+      msg.className = `message ${className}`;
+      msg.innerHTML = `<strong>${sender}:</strong> <div class="message-content">${html}</div>`;
+      chatWindow.appendChild(msg);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function speakText(text) {
+      if (!speakToggle.checked || !window.speechSynthesis) return;
+      const cleaned = text.replace(/\*\*/g, "").replace(/<[^>]+>/g, "");
+      const utterance = new SpeechSynthesisUtterance(cleaned);
+      utterance.rate = 1.1;
+      speechSynthesis.speak(utterance);
+    }
+
+    function formatResponseText(rawText) {
+      return rawText
+        .replace(/\*\*(.+?)\*\*:/g, "<b>$1:</b>")
+        .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")
+        .replace(/(?:^|\n)[\-*]\s+/g, "<br>• ")
+        .replace(/(?:^|\n)(\d+\.\s+)/g, "<br>$1")
+        .replace(/\n/g, "<br>");
+    }
+
+    async function fetchEmotion() {
+      try {
+        const res = await fetch("/get_emotion");
+        const data = await res.json();
+        emotionLabel.textContent = data.emotion.charAt(0).toUpperCase() + data.emotion.slice(1);
+        return data.emotion;
+      } catch {
+        emotionLabel.textContent = "Unknown";
+        return "neutral";
+      }
+    }
+
+
+    async function sendQuery(query) {
+      appendMessage("You", query, "user");
+
+      const botMsg = document.createElement("div");
+      botMsg.className = "message bot";
+      botMsg.innerHTML = "<strong>ClarifAI:</strong> <div id='response-html' class='message-content'>Thinking...</div>";
+      chatWindow.appendChild(botMsg);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+
+      const responseContainer = botMsg.querySelector("#response-html");
+      responseContainer.innerHTML = "";
+
+      try {
+        const res = await fetch("/ask_stream", {
+          method: "POST",
+          body: JSON.stringify({ query }),
+          headers: { "Content-Type": "application/json" },
+        });
+
+        if (!res.body) return;
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        let buffer = "";
+        let lastFlushIndex = 0;
+        let fullText = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          buffer += chunk;
+          fullText += chunk;
+
+          const flushIndex = Math.max(
+            buffer.lastIndexOf("."), 
+            buffer.lastIndexOf("\n"),
+            buffer.lastIndexOf("•"),
+            buffer.lastIndexOf(">")
+          );
+
+          if (flushIndex > lastFlushIndex) {
+            const stableChunk = buffer.slice(lastFlushIndex, flushIndex + 1);
+            const formatted = formatResponseText(stableChunk);
+            responseContainer.innerHTML += formatted;
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+
+            if (speakToggle.checked) speakText(stableChunk);
+            lastFlushIndex = flushIndex + 1;
+          }
+        }
+
+        const remaining = buffer.slice(lastFlushIndex).trim();
+        if (remaining) {
+          const formatted = formatResponseText(remaining);
+          responseContainer.innerHTML += formatted;
+          if (speakToggle.checked) speakText(remaining);
+        }
+
+        const match = fullText.match(/\[VISUAL:(.+?)\]/);
+        if (match) {
+          const imgUrl = match[1].trim();
+          const img = document.createElement("img");
+          img.src = imgUrl;
+          img.alt = "Generated Diagram";
+          img.className = "generated-diagram";
+          responseContainer.appendChild(img);
+        }
+
+        const emotion = await fetchEmotion();
+        if (["angry", "sad", "confused", "frustrated"].includes(emotion)) {
+          inputBox.value = `Explain this in a simpler way: ${query}`;
+        }
+
+      } catch (err) {
+        responseContainer.innerHTML = "⚠️ Error getting response.";
+      }
+    }
+
+    askBtn.addEventListener("click", () => {
+      const query = inputBox.value.trim();
+      if (query) {
+        sendQuery(query);
+        inputBox.value = "";
+      }
+    });
+
+    micBtn.addEventListener("click", () => {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = "en-US";
+      recognition.start();
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        inputBox.value = transcript;
+      };
+    });
+
+    uploadBtn.addEventListener("click", async () => {
+      const file = imageInput.files[0];
+      if (!file) return alert("Please select an image to upload.");
+
+      const formData = new FormData();
+      formData.append("image", file);
+
+      appendMessage("You", "📸 Sent an image", "user");
+
+      const analyzingMsg = document.createElement("div");
+      analyzingMsg.className = "message bot";
+      analyzingMsg.id = "clarifai-analyzing";
+      analyzingMsg.innerHTML = `<strong>ClarifAI:</strong> <div class='message-content'>🧠 Analyzing your image, please wait...</div>`;
+      chatWindow.appendChild(analyzingMsg);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+
+      try {
+        const res = await fetch("/analyze_image", {
+          method: "POST",
+          body: formData
+        });
+        const result = await res.json();
+
+        document.getElementById("clarifai-analyzing").remove();
+        appendMessage("ClarifAI", result.caption, "bot");
+        if (speakToggle.checked) speakText(result.caption);
+      } catch (err) {
+        document.getElementById("clarifai-analyzing").remove();
+        appendMessage("ClarifAI", "⚠️ Image analysis failed.", "bot");
+      }
+    });
+
+    setInterval(fetchEmotion, 3000);
+
+    // ===== About Modal Script =====
+    const aboutBtn = document.getElementById("about-button");
+    const modal = document.getElementById("about-modal");
+    const closeBtn = modal.querySelector(".close-button");
+
+    aboutBtn.addEventListener("click", () => modal.style.display = "block");
+    closeBtn.addEventListener("click", () => modal.style.display = "none");
+    window.addEventListener("click", (e) => {
+      if (e.target == modal) modal.style.display = "none";
+    });
+
+    // ===== Dark Mode Toggle =====
+const darkToggle = document.getElementById("darkModeToggle");
+
+darkToggle.addEventListener("change", () => {
+  document.body.classList.toggle("dark-mode", darkToggle.checked);
+  localStorage.setItem("clarifai-darkmode", darkToggle.checked ? "on" : "off");
+});
+
+// Load user's dark mode preference
+if (localStorage.getItem("clarifai-darkmode") === "on") {
+  document.body.classList.add("dark-mode");
+  darkToggle.checked = true;
+}
+
+  </script>
+</body>
+</html>
