@@ -75,7 +75,7 @@ clarifai-edu-assistant/
 ### 1. Clone the repository
 ```bash
 git clone https://github.com/chakri9133/ClarifAI-AI-Assistant.git
-cd ClarifAI-Project-
+cd ClarifAI-AI-Assistant
 ```
 
 ### 2. Install Python dependencies
