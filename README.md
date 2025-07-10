@@ -74,7 +74,7 @@ clarifai-edu-assistant/
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/chakri9133/ClarifAI-Project-.git
+git clone https://github.com/chakri9133/ClarifAI-AI-Assistant.git
 cd ClarifAI-Project-
 ```
 
@@ -118,7 +118,7 @@ Visit `http://localhost:5050` in your browser.
 
 ## 🔗 GitHub Repository
 
-Project Source Code: [ClarifAI GitHub](https://github.com/chakri9133/ClarifAI-Project-)
+Project Source Code: [ClarifAI GitHub](https://github.com/chakri9133/ClarifAI-AI-Assistant)
 
 ---
 
