@@ -52,7 +52,7 @@ ClarifAI is a real-time AI-powered educational assistant designed to support stu
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/your-username/clarifai-edu-assistant.git
+git clone https://github.com/chakri9133/clarifai-edu-assistant.git
 cd clarifai-edu-assistant
 ```
 
