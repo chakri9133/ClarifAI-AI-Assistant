@@ -96,7 +96,7 @@ Visit `http://localhost:5050` in your browser.
 
 ## 🔗 GitHub Repository
 
-Project Source Code: [ClarifAI GitHub](https://github.com/your-username/clarifai-edu-assistant)
+Project Source Code: [ClarifAI GitHub](https://github.com/chakri9133/ClarifAI-Project-)
 
 ---
 
