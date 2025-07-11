@@ -126,7 +126,7 @@ Project Source Code: [ClarifAI GitHub](https://github.com/chakri9133/ClarifAI-AI
 
 - [**Hasya**](https://github.com/Chavva-HasyaReddy) – Voice input, image captioning, OCR, visual rendering  
 - [**Chakri**](https://github.com/chakri9133) – Backend logic, LLM integration, emotion detection  
-- **Hima Sree** – Frontend UI, voice + emotion display, visual rendering  
+- [**Hima Sree**](https://github.com/Himasree08) – Frontend UI, voice + emotion display, visual rendering  
 
 ---
 
