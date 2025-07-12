@@ -129,6 +129,13 @@ Watch the project demo video here:
 
 ---
 
+## 📄 Project Report
+
+Download the complete project report (PDF):  
+📄 [ClarifAI Report – Google Drive](https://drive.google.com/file/d/1bBNCu4Y28i3FNy5WUYfYzVZJDF2HxsBe/view?usp=sharing)
+
+---
+
 ## 🤝 Contributors
 
 - [**Hasya**](https://github.com/Chavva-HasyaReddy) – Voice input, image captioning, OCR, visual rendering  
