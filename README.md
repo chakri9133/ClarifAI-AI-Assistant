@@ -122,6 +122,13 @@ Project Source Code: [ClarifAI GitHub](https://github.com/chakri9133/ClarifAI-AI
 
 ---
 
+## 📽️ Demo Video
+
+Watch the project demo video here:  
+▶️ [ClarifAI Demo – Google Drive](https://drive.google.com/file/d/1O16NL2WnBiTnAWRbJlajOMuEaR2oP_RI/view?usp=sharing)
+
+---
+
 ## 🤝 Contributors
 
 - [**Hasya**](https://github.com/Chavva-HasyaReddy) – Voice input, image captioning, OCR, visual rendering  
